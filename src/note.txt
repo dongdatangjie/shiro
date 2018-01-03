@@ -1,0 +1,258 @@
+User:
+	zhangsan 123
+	admin 123
+	tangjie 111
+Role:
+	ADMIN
+	EMP
+	TEST
+Resource:
+	系统管理	/admin/*
+	用户管理	/admin/user/*
+	用户添加	/admin/user/add
+	用户删除	/admin/user/delete
+	角色管理	/admin/role/*
+	角色添加	/admin/role/add
+	角色修改	/admin/role/update
+	
+	
+zhangsan
+	EMP
+		用户管理	/admin/user/*
+		用户添加	/admin/user/add
+		用户删除	/admin/user/delete
+		
+		
+admin
+	ADMIN
+		系统管理	/admin/*
+	
+tangjie
+	EMP TEST
+		用户管理	/admin/user/*
+		用户添加	/admin/user/add
+		用户删除	/admin/user/delete
+		角色管理	/admin/role/*
+		角色添加	/admin/role/add
+		角色修改	/admin/role/update				
+
+
+model:
+	User
+		int id;
+		String username;
+		String password;
+		String nickname;
+		int status;
+	UserRole
+		int id;
+		int userId;
+		int roleId; 
+	Role
+		int id;
+		String name;
+		String sn;
+	RoleResource
+		int id;
+		int roleId;
+		int resId;
+	Resource
+		int id;
+		String name;
+		String permission;
+		String url;
+Controller
+	LoginController /		
+		login() /login GET /login
+		login(String username,String password,Model model) /login POST redirect:/admin/user/list 用户列表页面
+			User user=userService.login(username,password);
+				User user=userDao.loadByUsername(username);
+		logout() GET /logout
+		unAuthorization() GET /unauth 没有授权页面
+	UserController /admin/user
+		list(Model model) /list GET user/list 显示用户列表页面
+			List<User> users=userService.listUser();
+				 List<User> users=userDao.listUser();
+		add(Model model) /add GET user/add 添加用户页面
+			List<Role> roles=roleService.listRole();	
+				List<Role> roles=roleDao.listRole();
+		add(User user,HttpServletRequest request) /add POST redirect:list  添加用户页面post
+			userService.addUser(user,roleIdList);
+				userDao.add(user);
+				roleDao.addUserRole(userId,roleId);
+		updateStatus(User user) /updateStatus POST result(HashMap) 修改用户状态		
+			userService.updateStatus(user);
+				userDao.updateStatus(user);		
+		update(int id,Model model) /update/{id} GET user/update	跳转到修改用户页面
+			User user=userService.findUserById(id);
+				User user=userDao.findUserById(id);
+			List<Role> roles=roleService.listRole();
+				List<Role> roles=roleDao.listRole();			
+			List<Role> roles=roleService.listRoleByUserId(id);
+				 List<Role> roles=roleDao.listRoleByUserId(id);
+		update(User user,HttpServletRequest request) /update/{id} POST	redirect:/admin/user/list 修改用户页面
+			userService.updateUser(user,roleIds);
+				userDao.deleteUserRole(userId);
+				userDao.addUserRole(userId,roleIds);
+				userDao.update(user);
+		listResources(int id,Model model) /resources/{id} GET user/resources 查看用户权限
+			List<Resources> resources=userService.listResourcesByUserId(int id);
+				resDao.listResourcesByUserId(id);
+			User user=userService.findUserById(id);
+				User user=userDao.findUserById(id);
+		deleteUsers(List<Integer> userIds) /delete	 POST result(HashMap) 批量删除用户
+			 userService.deleteUserAndUserRole(userids);
+			 	userDao.batchDeleteUser(userIds);
+			 	userDao.batchDeleteUserRole(userIds); for循环中
+	RoleController /admin/role
+		list(Model model) /list GET role/list 显示用户列表页面
+			List<Role> roles=roleService.listRole();
+				 List<Role> roles=roleDao.listRole();
+		add(Model model) /add GET role/add 添加角色页面
+			
+		add(Role role) /add POST redirect:list  添加角色页面post
+			roleService.add(role);
+				
+		update(int id,Model model) /update/{id} GET role/update	跳转到修改角色页面
+			Role role=roleService.findRoleById(id);
+				Role role=roleDao.findRoleById(id);
+				
+		update(Role role,HttpServletRequest request) /update/{id} POST	redirect:/admin/role/list 修改角色页面
+			roleService.updateRole(role);
+				userDao.update(role);
+		listResources(int id,Model model) /resources/{id} GET role/resources 查看角色资源
+			List<Resources> roleResources=roleService.listResourcesByRoleId(int id);
+				List<Resources> roleResources=roleDao.listResourcesByRoleId(id);
+			List<Resources> resources=roleService.listResources();
+				List<Resources> resources=roleService.listResources();	
+			Role role=roleService.findRoleById(id);
+				Role role=roleDao.findRoleById(id);
+		resource(RoleResource roleResource,Integer check) /resource GET result(HashMap) 设置资源
+			if(check==0){
+				roleService.deleteRoleResource(roleId,resourceId);
+					roleDao.deleteRoleResource(roleId,resourceId);
+			}else{
+				roleService.addRoleResource(roleId,resourceId);
+					roleDao.addRoleResource(roleId,resourceId);
+			}
+				
+		deleteRoles(List<Integer> roleIds) /delete	 POST result(HashMap) 批量删除角色
+			 roleService.deleteRoleAndUserRoleAndRoleResource(roleids);
+			 	roleDao.batchDeleteRoles(roleIds);
+			 	roleDao.batchDeleteUserRole(roleIds); for循环中
+			 	roleDao.batchDeleteRoleResource(roleIds); for循环中	
+	ResourceController /admin/resource
+		list(Model model) /list GET resource/list 显示资源列表页面
+			List<Resource> resources=resourceService.listResource();
+				 List<Resource> resources=resourceDao.listResource();
+		add(Model model) /add GET resource/add 添加资源页面
+			
+		add(Resource resource) /add POST redirect:list  添加资源页面post
+			resourceService.add(resource);
+				
+		update(int id,Model model) /update/{id} GET resource/update	跳转到修改资源页面
+			Resource resource=resourceService.findResourceById(id);
+				Resource resource=resourceDao.findResourceById(id);
+				
+		update(Resource resource,HttpServletRequest request) /update/{id} POST	redirect:/admin/resource/list 修改角色页面
+			resourceService.updateResource(resource);
+				resourceDao.update(resource);
+
+Service
+	User user=userService.login(username,password);
+			User user=userDao.loadByUsername(username);
+	List<User> users=userService.listUser();
+			List<User> users=userDao.listUser();
+	List<Role> roles=roleService.listRole();	
+			List<Role> roles=roleDao.listRole();
+	userService.addUser(user,roleIdList);
+		userDao.add(user);
+		roleDao.addUserRole(userId,roleId);
+	userService.updateStatus(user);
+		userDao.updateStatus(user);		
+	User user=userService.findUserById(id);
+		User user=userDao.findUserById(id);
+	List<Role> roles=roleService.listRole();
+		List<Role> roles=roleDao.listRole();			
+	List<Role> roles=userService.listRoleByUserId(id);
+		List<Role> roles=roleDao.listRoleByUserId(id);
+	userService.updateUser(user,roleIds);
+		userDao.deleteUserRole(userId);
+		userDao.addUserRole(userId,roleIds);
+		userDao.update(user);
+	List<Resources> resources=userService.listResourcesByUserId(int id);
+		userDao.listResourcesByUserId(id);
+	User user=userService.findUserById(id);
+		User user=userDao.findUserById(id);
+	userService.deleteUserAndUserRole(userids);
+		userDao.batchDeleteUser(userIds);
+		userDao.batchDeleteUserRole(userIds); for循环中
+	List<Role> roles=roleService.listRole();
+		List<Role> roles=roleDao.listRole();
+	roleService.add(role);
+		roleDao.add(role)		
+	Role role=roleService.findRoleById(id);
+		Role role=roleDao.findRoleById(id);
+	roleService.updateRole(role);
+		userDao.update(role);
+	List<Resources> roleResources=roleService.listResourcesByRoleId(int id);
+		List<Resources> roleResources=roleDao.listResourcesByRoleId(id);
+	List<Resources> resources=resService.listResource();
+		List<Resources> resources=resDao.listResource();	
+	Role role=roleService.findRoleById(id);
+		Role role=roleDao.findRoleById(id);
+	roleService.deleteRoleResource(roleId,resourceId);
+		roleDao.deleteRoleResource(roleId,resourceId);
+	roleService.addRoleResource(roleId,resourceId);
+		roleDao.addRoleResource(roleId,resourceId);
+	roleService.deleteRoleAndUserRoleAndRoleResource(roleids);
+		roleDao.batchDeleteRoles(roleIds);
+		roleDao.batchDeleteUserRole(roleIds); for循环中
+		roleDao.batchDeleteRoleResource(roleIds); for循环中	
+	List<Resource> resources=resService.listResource();
+		List<Resource> resources=resDao.listResource();
+	resService.add(resource);
+		resDao.add(resource);		
+	Resource resource=resService.findResourceById(id);
+		Resource resource=resDao.findResourceById(id);
+	resService.updateResource(resource);
+		resDao.update(resource);
+	
+Dao
+		User user=userDao.loadByUsername(username);
+		List<User> users=userDao.listUser();
+		List<Role> roles=roleDao.listRole();
+		userDao.add(user);
+		userDao.updateStatus(user);		
+		User user=userDao.findUserById(id);
+		List<Role> roles=roleDao.listRole();			
+		List<Role> roles=roleDao.listRoleByUserId(id);
+		userDao.deleteUserRoleByUserId(userId);
+		userDao.addUserRole(userId,roleId);
+			userDao.loadUserRole(userId,roleId);
+		userDao.update(user);
+		userDao.listResourcesByUserId(id);
+		User user=userDao.findUserById(id);
+		userDao.batchDeleteUser(userIds);
+		userDao.batchDeleteUserRole(userIds); for循环中
+		List<Role> roles=roleDao.listRole();
+		roleDao.add(role)		
+		Role role=roleDao.findRoleById(id);
+		userDao.update(role);
+		List<Resources> roleResources=roleDao.listResourcesByRoleId(id);
+		List<Resources> resources=resDao.listResource();	
+		Role role=roleDao.findRoleById(id);
+		roleDao.deleteRoleResource(roleId,resourceId);
+		roleDao.addRoleResource(roleId,resourceId);
+		roleDao.batchDeleteRoles(roleIds);
+		roleDao.batchDeleteUserRole(roleIds); for循环中
+		roleDao.batchDeleteRoleResource(roleIds); for循环中	
+		List<Resource> resources=resDao.listResource();
+		resDao.add(resource);		
+		Resource resource=resDao.findResourceById(id);
+		resDao.update(resource);
+
+1.解决hibernate建表出现字符集乱码的问题
+alter table `tablename` convert to character set utf8; 
+		
+		

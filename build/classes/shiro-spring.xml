@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+           http://www.springframework.org/schema/beans/spring-beans-2.5.xsd
+            http://www.springframework.org/schema/context
+           http://www.springframework.org/schema/context/spring-context-2.5.xsd
+           http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-2.5.xsd
+           http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-2.5.xsd">
+	<!-- urlPermissionResolver=com.tangjie.permission.UrlPermissionResolver 
+		securityManager.authorizer.permissionResolver=$urlPermissionResolver authc.loginUrl=/login 
+		roles.unauthorizedUrl=/unauth perms.unauthorizedUrl=/unauth hashMatcher=org.apache.shiro.authc.credential.HashedCredentialsMatcher 
+		hashMatcher.hashAlgorithmName=md5 userRealm=com.tangjie.realm.MyBasicRealm 
+		userRealm.credentialsMatcher=$hashMatcher securityManager.realms=$userRealm 
+		[filters] resourceCheckFilter=com.tangjie.filter.ResourceCheckFilter resourceCheckFilter.errorUrl=/unauth 
+		[urls] /admin/**=authc,resourceCheckFilter /login=anon /logout=logout -->
+	<bean id="urlPermissionResolver" class="com.tangjie.permission.UrlPermissionResolver"></bean>
+	<bean id="hashMatcher"
+		class="org.apache.shiro.authc.credential.HashedCredentialsMatcher">
+		<property name="hashAlgorithmName" value="md5"></property>
+	</bean>
+	<bean id="userRealm" class="com.tangjie.realm.MyBasicRealm">
+		<property name="credentialsMatcher" ref="hashMatcher"></property>
+	</bean>
+	<bean id="resourceCheckFilter" class="com.tangjie.filter.ResourceCheckFilter">
+		<property name="errorUrl" value="/unauth"></property>
+	</bean>
+	<bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager">
+		<!-- Single realm app. If you have multiple realms, use the 'realms' property 
+			instead. -->
+		<property name="realm" ref="userRealm" />
+		<property name="authorizer.permissionResolver" ref="urlPermissionResolver"></property>
+	</bean>
+	<!-- <bean id="cacheManager" class="org.apache.shiro.cache.ehcache.EhCacheManager">
+		<property name="cacheManagerConfigFile" value="classpath:ehcache.xml" />
+	</bean> -->
+	<bean id="shiroFilter" class="org.apache.shiro.spring.web.ShiroFilterFactoryBean">
+		<property name="securityManager" ref="securityManager" />
+		<property name="loginUrl" value="/login" />
+		<property name="filterChainDefinitions">
+			<value>
+				/admin/**=authc,resourceCheckFilter
+				/login=anon
+			</value>
+		</property>
+	</bean>
+	<bean id="lifecycleBeanPostProcessor" class="org.apache.shiro.spring.LifecycleBeanPostProcessor" />
+	<bean
+		class="org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator"
+		depends-on="lifecycleBeanPostProcessor" />
+	<bean
+		class="org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor">
+		<property name="securityManager" ref="securityManager" />
+	</bean>
+</beans>
